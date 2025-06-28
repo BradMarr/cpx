@@ -3,7 +3,7 @@
   "clangd.arguments": ["--compile-commands-dir=.", "--header-insertion=never"],
   "clangd.fallbackFlags": [
     "-std=c++23",
-    "-fprebuilt-module-path=.clx/run",
-    "-fprebuilt-module-path=.clx/build"
+    "-fprebuilt-module-path=.cpx/run",
+    "-fprebuilt-module-path=.cpx/build"
   ]
 }

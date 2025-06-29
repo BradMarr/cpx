@@ -1,2 +1,2 @@
-[run]
-args = ["run"]
+[exec]
+args = ["build"]

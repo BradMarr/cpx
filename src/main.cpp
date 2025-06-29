@@ -24,13 +24,13 @@ int main(int argc, char* argv[]) {
     _argv = argv;
     try {
         if (get(1) == "run") {
-            run(config);
+            compiler::run(config);
             return 0;
         } else if (get(1) == "build") {
-            build(config);
+            compiler::build(config);
             return 0;
         } else if (get(1) == "exec") {
-            exec(config);
+            compiler::exec(config);
             return 0;
         } else {
             std::cerr << "Usage: " << argv[0] << " <command>\n";

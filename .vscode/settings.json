@@ -1,9 +1,5 @@
 {
   "cmake.ignoreCMakeListsMissing": true,
   "clangd.arguments": ["--compile-commands-dir=.", "--header-insertion=never"],
-  "clangd.fallbackFlags": [
-    "-std=c++23",
-    "-fprebuilt-module-path=.cpx/run",
-    "-fprebuilt-module-path=.cpx/build"
-  ]
+  "clangd.fallbackFlags": ["-std=c++23", "-fprebuilt-module-path=.cpx/build"]
 }

@@ -8,9 +8,9 @@ module;
 #include <format>
 #include <iostream>
 
-export module meta;
+export module build.meta;
 
-import modules;
+import build.modules;
 
 void write(modules::Module& mod, const std::time_t last_modified) {
     std::ofstream file(mod.path("meta").c_str(), std::ios::binary);

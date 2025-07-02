@@ -10,12 +10,12 @@ module;
 #include <filesystem>
 #include <unordered_set>
 
-#include "../include/toml++/toml.hpp"
+#include "../../include/toml++/toml.hpp"
 
-export module compiler;
+export module build.compiler;
 
-import modules;
-import meta;
+import build.modules;
+import build.meta;
 
 void gather_transitive_module_flags(modules::Module& mod, std::unordered_set<std::string>& seen, std::string& flags) {
     for (modules::Module* dep : mod.dependencies) {
@@ -54,8 +54,8 @@ void cpp_compile(modules::Module& mod) {
     std::string compile_command = std::format(
         "clang++-19 -std=c++23 {} -c {} -o {}",
         dep_flags,
-        mod.sourcepath.string(),
-        mod.path("o").string()
+        mod.sourcepath.c_str(),
+        mod.path("o").c_str()
     );
 
     std::cout << "Compiling " << mod.name << std::endl;
@@ -68,7 +68,7 @@ void cpp_compile(modules::Module& mod) {
     std::string link_command = std::format(
         "clang++-19 -std=c++23 {} -o {}",
         obj_files,
-        mod.path("").string()
+        mod.path("").c_str()
     );
 
     std::cout << "Linking " << mod.name << std::endl;
@@ -129,9 +129,16 @@ bool populate_dependency_graph(modules::Module& mod) {
 
             auto it = modules::map.find(dep_name);
             if (it == modules::map.end()) {
-                modules::Module dep_mod{dep_name,
-                    std::filesystem::path("src") / (dep_name + ".cppm")
-                };
+                std::filesystem::path source_path = "src";
+                std::stringstream ss(dep_name);
+                std::string segment;
+
+                while (std::getline(ss, segment, '.')) {
+                    source_path /= segment;
+                }
+                source_path += ".cppm";
+
+                modules::Module dep_mod{dep_name, source_path};
                 auto [new_it, inserted] = modules::map.emplace(dep_name, std::move(dep_mod));
                 it = new_it;
             }

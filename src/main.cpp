@@ -1,4 +1,4 @@
-import compiler;
+import build.compiler;
 
 #include <expected>
 #include <string_view>

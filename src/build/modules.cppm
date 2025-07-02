@@ -5,7 +5,7 @@ module;
 #include <vector>
 #include <unordered_map>
 
-export module modules;
+export module build.modules;
 
 export namespace modules {
     inline std::filesystem::path working_dir;

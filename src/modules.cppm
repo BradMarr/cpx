@@ -8,24 +8,27 @@ module;
 export module modules;
 
 export namespace modules {
-    struct Module {
+    inline std::filesystem::path working_dir;
+
+    class Module {
+        public:
         std::string name;
         std::filesystem::path sourcepath;
     
+        std::time_t last_modified;
         std::vector<Module*> dependencies;
         bool built = false;
+
+        const std::filesystem::path path(std::string extension) {
+            if (extension == "cpp" || extension == "cppm") {
+                return sourcepath;
+            } else if (extension.empty()) {
+                return working_dir / name;
+            } else {
+                return working_dir / (name + "." + extension);
+            }
+        }
     };
 
     inline std::unordered_map<std::string, Module> map;
-    inline std::filesystem::path working_dir;
-    
-    std::filesystem::path path(Module& mod, std::string extension) {
-        if (extension == "cpp" || extension == "cppm") {
-            return mod.sourcepath;
-        } else if (extension.empty()) {
-            return working_dir / mod.name;
-        } else {
-            return working_dir / (mod.name + "." + extension);
-        }
-    }
 }

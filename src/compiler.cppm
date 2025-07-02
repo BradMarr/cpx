@@ -10,7 +10,7 @@ module;
 #include <filesystem>
 #include <unordered_set>
 
-#include "../include/toml++/toml.h"
+#include "../include/toml++/toml.hpp"
 
 export module compiler;
 
@@ -58,7 +58,7 @@ void cpp_compile(modules::Module& mod) {
         mod.path("o").string()
     );
 
-    std::cout << "Compiling " + mod.name + " with command: " + compile_command << std::endl;
+    std::cout << "Compiling " << mod.name << std::endl;
     int result = system(compile_command.c_str());
     if (result != 0) {
         std::cerr << "Compilation failed for " << mod.name << std::endl;
@@ -71,7 +71,7 @@ void cpp_compile(modules::Module& mod) {
         mod.path("").string()
     );
 
-    std::cout << "Linking " << mod.name << " with command: " << link_command << std::endl;
+    std::cout << "Linking " << mod.name << std::endl;
     result = system(link_command.c_str());
     if (result != 0) {
         std::cerr << "Linking failed for " << mod.name << std::endl;
@@ -90,7 +90,7 @@ void cppm_compile(modules::Module& mod) {
         mod.path("pcm").c_str()
     );
 
-    std::cout << "Precompiling " << mod.name << " with command: " << command << std::endl;
+    std::cout << "Precompiling module " << mod.name << std::endl;
     int result = system(command.c_str());
     if (result != 0) {
         std::cerr << "Precompilation failed for " << mod.name << std::endl;
@@ -104,7 +104,7 @@ void cppm_compile(modules::Module& mod) {
         mod.path("o").c_str()
     );
 
-    std::cout << "Compiling " << mod.name << " with command: " << command << std::endl;
+    std::cout << "Compiling module " << mod.name << std::endl;
     result = system(command.c_str());
     if (result != 0) {
         std::cerr << "Compilation failed for " << mod.name << std::endl;
@@ -166,23 +166,33 @@ void compile_module(modules::Module& mod) {
     meta::update(mod);
 }
 
+void just_build(toml::table& config) {
+    modules::working_dir = std::filesystem::path(".cpx") / "build";
+    std::filesystem::create_directories(modules::working_dir);
+    modules::Module main_module{"main", "src/main.cpp"};
+    populate_dependency_graph(main_module);
+    compile_module(main_module);
+}
+
+void clean() {
+    std::filesystem::remove_all(modules::working_dir);
+    std::filesystem::create_directories(modules::working_dir);
+}
+
 export namespace compiler {
-    void build(toml::table& config) {
+    void build(toml::table& config, bool to_clean = false) {
         modules::working_dir = std::filesystem::path(".cpx") / "build";
-        std::filesystem::create_directories(modules::working_dir);
-        modules::Module main_module{"main", "src/main.cpp"};
-        populate_dependency_graph(main_module);
-        compile_module(main_module);
+        if (to_clean)
+            clean();
+        just_build(config);
+        std::cout << "\n -- Build Complete --\n" << std::endl;
     }
     
-    void run(toml::table& config) {
+    void run(toml::table& config, bool to_clean = false) {
         modules::working_dir = std::filesystem::path(".cpx") / "run";
-        std::filesystem::remove_all(modules::working_dir);
-        std::filesystem::create_directories(modules::working_dir);
-        modules::Module main_module{"main", "src/main.cpp"};
-        populate_dependency_graph(main_module);
-        compile_module(main_module);
-    
+        if (to_clean) 
+            clean();
+        just_build(config);
         std::cout << "\n -- Running Program --\n" << std::endl;
         std::string command = modules::working_dir / "main";
     

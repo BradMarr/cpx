@@ -4,14 +4,14 @@ import compiler;
 #include <string_view>
 #include <iostream>
 
-#include "../include/toml++/toml.h"
+#include "../include/toml++/toml.hpp"
 
 int _argc;
 char** _argv;
 
 std::string_view get(int index) {
     if (index >= _argc) {
-        throw std::runtime_error("Not enough arguments provided");
+        return "";
     } else {
         return _argv[index];
     }
@@ -22,23 +22,24 @@ int main(int argc, char* argv[]) {
 
     _argc = argc;
     _argv = argv;
-    try {
-        if (get(1) == "run") {
-            compiler::run(config);
-            return 0;
-        } else if (get(1) == "build") {
-            compiler::build(config);
-            return 0;
-        } else if (get(1) == "exec") {
-            compiler::exec(config);
-            return 0;
+
+    if (get(1) == "run") {
+        if (get(2) == "clean") {
+            compiler::build(config, true);
         } else {
-            std::cerr << "Usage: " << argv[0] << " <command>\n";
-            std::cerr << "Commands: run, build, exec\n";
-            return 1;
+            compiler::build(config);
         }
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+    } else if (get(1) == "build") {
+        if (get(2) == "clean") {
+            compiler::build(config, true);
+        } else {
+            compiler::build(config);
+        }
+    } else if (get(1) == "exec") {
+        compiler::exec(config);
+    } else {
+        std::cerr << "Usage: " << argv[0] << " <command>\n";
+        std::cerr << "Commands: run, build, exec\n";
         return 1;
     }
 }

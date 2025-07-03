@@ -8,9 +8,9 @@ module;
 #include <format>
 #include <iostream>
 
-export module build.meta;
+export module builder.meta;
 
-import build.modules;
+import builder.modules;
 
 void write(modules::Module& mod, const std::time_t last_modified) {
     std::ofstream file(mod.path("meta").c_str(), std::ios::binary);
@@ -53,7 +53,6 @@ export namespace meta {
             std::time_t meta_time = read(mod);
             return last_modified == meta_time;
         } catch (const std::runtime_error& e) {
-            std::cout << "[DEBUG] is_up_to_date error for module " << mod.name << ": " << e.what() << std::endl;
             return false;
         }
     }

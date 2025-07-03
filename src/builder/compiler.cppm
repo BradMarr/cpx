@@ -12,10 +12,12 @@ module;
 
 #include "../../include/toml++/toml.hpp"
 
-export module build.compiler;
+export module builder.compiler;
 
-import build.modules;
-import build.meta;
+import builder.modules;
+import builder.meta;
+
+const char* BASE_COMMAND = "clang++-19 -std=c++23";
 
 void gather_transitive_module_flags(modules::Module& mod, std::unordered_set<std::string>& seen, std::string& flags) {
     for (modules::Module* dep : mod.dependencies) {
@@ -52,7 +54,8 @@ void cpp_compile(modules::Module& mod) {
     }
     
     std::string compile_command = std::format(
-        "clang++-19 -std=c++23 {} -c {} -o {}",
+        "{} -std=c++23 {} -c {} -o {}",
+        BASE_COMMAND,
         dep_flags,
         mod.sourcepath.c_str(),
         mod.path("o").c_str()
@@ -66,7 +69,8 @@ void cpp_compile(modules::Module& mod) {
     }
     
     std::string link_command = std::format(
-        "clang++-19 -std=c++23 {} -o {}",
+        "{} -std=c++23 {} -o {}",
+        BASE_COMMAND,
         obj_files,
         mod.path("").c_str()
     );
@@ -84,7 +88,8 @@ void cppm_compile(modules::Module& mod) {
     gather_transitive_module_flags(mod, seen, dep_flags);
 
     std::string command = std::format(
-        "clang++-19 -std=c++23 {} -x c++-module --precompile {} -o {}",
+        "{} {} -x c++-module --precompile {} -o {}",
+        BASE_COMMAND,
         dep_flags,
         mod.path("cppm").c_str(), 
         mod.path("pcm").c_str()
@@ -98,7 +103,8 @@ void cppm_compile(modules::Module& mod) {
     }
 
     command = std::format(
-        "clang++-19 -std=c++23 {} -c {} -o {}",
+        "{} {} -c {} -o {}",
+        BASE_COMMAND,
         dep_flags,
         mod.path("pcm").c_str(),
         mod.path("o").c_str()
@@ -126,6 +132,10 @@ bool populate_dependency_graph(modules::Module& mod) {
         std::smatch match;
         if (std::regex_search(line, match, import_regex)) {
             std::string dep_name = match[1].str();
+
+            if (dep_name == "std" || dep_name.starts_with("std.")) {
+                continue;
+            }
 
             auto it = modules::map.find(dep_name);
             if (it == modules::map.end()) {

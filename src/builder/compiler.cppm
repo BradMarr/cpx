@@ -213,9 +213,9 @@ export namespace compiler {
         std::cout << "\n -- Running Program --\n" << std::endl;
         std::string command = modules::working_dir / "main";
     
-        if (auto run = config["run"].as_table()) {
-            if (auto args = (*run)["args"].as_array()) {
-                for (const auto& arg : *args) {
+        if (toml::table* run = config["run"].as_table()) {
+            if (toml::array* args = (*run)["args"].as_array()) {
+                for (const toml::node& arg : *args) {
                     if (auto str = arg.value<std::string>()) {
                         command += " " + *str;
                     }
@@ -230,9 +230,9 @@ export namespace compiler {
         modules::working_dir = std::filesystem::path(".cpx") / "build";
         std::string command = modules::working_dir / "main";
     
-        if (auto run = config["exec"].as_table()) {
-            if (auto args = (*run)["args"].as_array()) {
-                for (const auto& arg : *args) {
+        if (toml::table* run = config["exec"].as_table()) {
+            if (toml::array* args = (*run)["args"].as_array()) {
+                for (const toml::node& arg : *args) {
                     if (auto str = arg.value<std::string>()) {
                         command += " " + *str;
                     }

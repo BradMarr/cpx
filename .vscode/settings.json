@@ -1,5 +1,6 @@
 {
   "cmake.ignoreCMakeListsMissing": true,
+  "clangd.path": "/usr/bin/clangd-19",
   "clangd.arguments": ["--compile-commands-dir=.", "--header-insertion=never"],
   "clangd.fallbackFlags": ["-std=c++23", "-fprebuilt-module-path=.cpx/build"]
 }

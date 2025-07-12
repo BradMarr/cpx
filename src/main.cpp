@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
         compiler::exec(config);
     } else {
         std::cerr << "Usage: " << argv[0] << " <command>\n";
-        std::cerr << "Commands: run, build, exec\n";
+        std::cerr << "Use `" << argv[0] << " help` to show more info.";
         return 1;
     }
 }

@@ -3,6 +3,8 @@
 
 ## Get started
 
+Run these commands or use install.sh
+
 ```bash
 wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s -- 19 all
 sudo apt install clang-19

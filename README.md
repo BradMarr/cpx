@@ -1,15 +1,15 @@
 # cpx
 
-
 ## Get started
 
-Run these commands or use install.sh
+On Debian linux install via
 
 ```bash
-wget -O - https://apt.llvm.org/llvm.sh | sudo bash -s -- 19 all
-sudo apt install clang-19
-
-sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-sudo apt update
-sudo apt install -y g++-13 libstdc++6
+curl -sSL https://raw.githubusercontent.com/BradMarr/cpx/main/install.sh | sh
 ```
+
+On other systems... feel free to contribute!
+
+## To Contribute
+
+Simply run the install script, clone, then build with cpx!

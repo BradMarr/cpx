@@ -183,7 +183,7 @@ void compile_module(modules::Module& mod) {
     meta::update(mod);
 }
 
-void just_build(toml::table& config) {
+void just_build(const toml::table& config) {
     modules::working_dir = std::filesystem::path(".cpx") / "build";
     std::filesystem::create_directories(modules::working_dir);
     modules::Module main_module{"main", "src/main.cpp"};
@@ -197,7 +197,7 @@ void clean() {
 }
 
 export namespace compiler {
-    void build(toml::table& config, bool to_clean = false) {
+    void build(const toml::table& config, bool to_clean = false) {
         modules::working_dir = std::filesystem::path(".cpx") / "build";
         if (to_clean)
             clean();
@@ -205,7 +205,7 @@ export namespace compiler {
         std::cout << "\n -- Build Complete --\n" << std::endl;
     }
     
-    void run(toml::table& config, bool to_clean = false) {
+    void run(const toml::table& config, bool to_clean = false) {
         modules::working_dir = std::filesystem::path(".cpx") / "run";
         if (to_clean) 
             clean();
@@ -213,8 +213,8 @@ export namespace compiler {
         std::cout << "\n -- Running Program --\n" << std::endl;
         std::string command = modules::working_dir / "main";
     
-        if (toml::table* run = config["run"].as_table()) {
-            if (toml::array* args = (*run)["args"].as_array()) {
+        if (const toml::table* run = config["run"].as_table()) {
+            if (const toml::array* args = (*run)["args"].as_array()) {
                 for (const toml::node& arg : *args) {
                     if (auto str = arg.value<std::string>()) {
                         command += " " + *str;
@@ -226,12 +226,12 @@ export namespace compiler {
         system(command.c_str());
     }
     
-    void exec(toml::table& config) {
+    void exec(const toml::table& config) {
         modules::working_dir = std::filesystem::path(".cpx") / "build";
         std::string command = modules::working_dir / "main";
     
-        if (toml::table* run = config["exec"].as_table()) {
-            if (toml::array* args = (*run)["args"].as_array()) {
+        if (const toml::table* run = config["exec"].as_table()) {
+            if (const toml::array* args = (*run)["args"].as_array()) {
                 for (const toml::node& arg : *args) {
                     if (auto str = arg.value<std::string>()) {
                         command += " " + *str;

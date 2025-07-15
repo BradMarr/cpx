@@ -17,27 +17,27 @@ export module builder.compiler;
 import builder.modules;
 import builder.meta;
 
-const char* BASE_COMMAND = "clang++-19 -std=c++23";
+constexpr std::string_view BASE_COMMAND = "clang++-19 -std=c++23";
 
-void gather_transitive_module_flags(modules::Module& mod, std::unordered_set<std::string>& seen, std::string& flags) {
-    for (modules::Module* dep : mod.dependencies) {
+void gather_transitive_module_flags(const modules::Module& mod, std::unordered_set<std::string>& seen, std::string& flags) {
+    for (const modules::Module* dep : mod.dependencies) {
         if (seen.insert(dep->name).second) {
-            flags += std::format(" -fmodule-file={}={}", dep->name, dep->path("pcm").c_str());
+            flags += std::format(" -fmodule-file={}={}", dep->name, dep->path("pcm").string());
             gather_transitive_module_flags(*dep, seen, flags);
         }
     }
 }
 
-void gather_transitive_object_files(modules::Module& mod, std::unordered_set<std::string>& seen, std::vector<std::string>& obj_files) {
-    for (modules::Module* dep : mod.dependencies) {
+void gather_transitive_object_files(const modules::Module& mod, std::unordered_set<std::string>& seen, std::vector<std::string>& obj_files) {
+    for (const modules::Module* dep : mod.dependencies) {
         if (seen.insert(dep->name).second) {
-            obj_files.push_back(dep->path("o").c_str());
+            obj_files.push_back(dep->path("o").string());
             gather_transitive_object_files(*dep, seen, obj_files);
         }
     }
 }
 
-void cpp_compile(modules::Module& mod) {
+void cpp_compile(const modules::Module& mod) {
     std::string dep_flags;
     std::unordered_set<std::string> seen_flags;
     gather_transitive_module_flags(mod, seen_flags, dep_flags);
@@ -46,7 +46,7 @@ void cpp_compile(modules::Module& mod) {
     std::vector<std::string> obj_files_vec;
     gather_transitive_object_files(mod, seen_objs, obj_files_vec);
 
-    obj_files_vec.push_back(mod.path("o").c_str());
+    obj_files_vec.push_back(mod.path("o").string());
 
     std::string obj_files;
     for (const auto& o : obj_files_vec) {
@@ -57,8 +57,8 @@ void cpp_compile(modules::Module& mod) {
         "{} -std=c++23 {} -c {} -o {}",
         BASE_COMMAND,
         dep_flags,
-        mod.sourcepath.c_str(),
-        mod.path("o").c_str()
+        mod.sourcepath.string(),
+        mod.path("o").string()
     );
 
     std::cout << "Compiling " << mod.name << std::endl;
@@ -72,7 +72,7 @@ void cpp_compile(modules::Module& mod) {
         "{} -std=c++23 {} -o {}",
         BASE_COMMAND,
         obj_files,
-        mod.path("").c_str()
+        mod.path("").string()
     );
 
     std::cout << "Linking " << mod.name << std::endl;
@@ -82,7 +82,7 @@ void cpp_compile(modules::Module& mod) {
     }
 }
 
-void cppm_compile(modules::Module& mod) {
+void cppm_compile(const modules::Module& mod) {
     std::string dep_flags;
     std::unordered_set<std::string> seen;
     gather_transitive_module_flags(mod, seen, dep_flags);
@@ -91,8 +91,8 @@ void cppm_compile(modules::Module& mod) {
         "{} {} -x c++-module --precompile {} -o {}",
         BASE_COMMAND,
         dep_flags,
-        mod.path("cppm").c_str(), 
-        mod.path("pcm").c_str()
+        mod.path("cppm").string(), 
+        mod.path("pcm").string()
     );
 
     std::cout << "Precompiling module " << mod.name << std::endl;
@@ -106,8 +106,8 @@ void cppm_compile(modules::Module& mod) {
         "{} {} -c {} -o {}",
         BASE_COMMAND,
         dep_flags,
-        mod.path("pcm").c_str(),
-        mod.path("o").c_str()
+        mod.path("pcm").string(),
+        mod.path("o").string()
     );
 
     std::cout << "Compiling module " << mod.name << std::endl;
@@ -183,63 +183,55 @@ void compile_module(modules::Module& mod) {
     meta::update(mod);
 }
 
-void just_build(const toml::table& config) {
-    modules::working_dir = std::filesystem::path(".cpx") / "build";
+void general_build(const toml::table& config, bool to_clean = false) {
+    if (to_clean) {
+        std::filesystem::remove_all(modules::working_dir);
+    }
+
     std::filesystem::create_directories(modules::working_dir);
+
     modules::Module main_module{"main", "src/main.cpp"};
     populate_dependency_graph(main_module);
     compile_module(main_module);
 }
 
-void clean() {
-    std::filesystem::remove_all(modules::working_dir);
-    std::filesystem::create_directories(modules::working_dir);
+std::string get_args(const toml::table& config, const std::string_view section) {
+    std::string args;
+    if (const toml::table* table = config[section].as_table()) {
+        if (const toml::array* arr = (*table)["args"].as_array()) {
+            for (const auto& arg : *arr) {
+                if (auto str = arg.value<std::string>()) {
+                    args += " " + *str;
+                }
+            }
+        }
+    }
+    return args;
 }
+
 
 export namespace compiler {
     void build(const toml::table& config, bool to_clean = false) {
         modules::working_dir = std::filesystem::path(".cpx") / "build";
-        if (to_clean)
-            clean();
-        just_build(config);
+        general_build(config, to_clean);
         std::cout << "\n -- Build Complete --\n" << std::endl;
     }
     
     void run(const toml::table& config, bool to_clean = false) {
         modules::working_dir = std::filesystem::path(".cpx") / "run";
-        if (to_clean) 
-            clean();
-        just_build(config);
+        general_build(config, to_clean);
+
         std::cout << "\n -- Running Program --\n" << std::endl;
-        std::string command = modules::working_dir / "main";
-    
-        if (const toml::table* run = config["run"].as_table()) {
-            if (const toml::array* args = (*run)["args"].as_array()) {
-                for (const toml::node& arg : *args) {
-                    if (auto str = arg.value<std::string>()) {
-                        command += " " + *str;
-                    }
-                }
-            }
-        }
-    
+
+        const std::string command = (modules::working_dir / "main").string() 
+            + get_args(config, "run");
         system(command.c_str());
     }
     
     void exec(const toml::table& config) {
         modules::working_dir = std::filesystem::path(".cpx") / "build";
-        std::string command = modules::working_dir / "main";
-    
-        if (const toml::table* run = config["exec"].as_table()) {
-            if (const toml::array* args = (*run)["args"].as_array()) {
-                for (const toml::node& arg : *args) {
-                    if (auto str = arg.value<std::string>()) {
-                        command += " " + *str;
-                    }
-                }
-            }
-        }
-    
+        const std::string command = (modules::working_dir / "main").string() 
+            + get_args(config, "exec");
         system(command.c_str());
     }
 }

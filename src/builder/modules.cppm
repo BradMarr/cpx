@@ -19,7 +19,7 @@ export namespace modules {
         std::vector<Module*> dependencies;
         bool built = false;
 
-        const std::filesystem::path path(std::string extension) {
+        const std::filesystem::path path(const std::string extension) const {
             if (extension == "cpp" || extension == "cppm") {
                 return sourcepath;
             } else if (extension.empty()) {

@@ -19,24 +19,25 @@ std::string_view get(int index) {
 }
 
 int main(int argc, char* argv[]) {
-    toml::table config = toml::parse_file(".cpx/config.toml");
-
     _argc = argc;
     _argv = argv;
 
     if (get(1) == "run") {
+        const toml::table config = toml::parse_file(".cpx/config.toml");
         if (get(2) == "clean") {
-            compiler::build(config, true);
+            compiler::run(config, true);
         } else {
-            compiler::build(config);
+            compiler::run(config);
         }
     } else if (get(1) == "build") {
+        const toml::table config = toml::parse_file(".cpx/config.toml");
         if (get(2) == "clean") {
             compiler::build(config, true);
         } else {
             compiler::build(config);
         }
     } else if (get(1) == "exec") {
+        const toml::table config = toml::parse_file(".cpx/config.toml");
         compiler::exec(config);
     } else if (get(1) == "help") {
         std::cout << help_message;

@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
         const toml::table config = toml::parse_file(".cpx/config.toml");
         compiler::exec(config);
     } else if (get(1) == "help") {
-        std::cout << help_message;
+        std::cout << help_message << std::endl;
     } else {
         std::cerr << "Usage: " << argv[0] << " <command>\n";
         std::cerr << "Please use `cpx help` for help.\n";

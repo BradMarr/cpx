@@ -4,6 +4,7 @@ import builder.compiler;
 #include <iostream>
 #include <expected>
 
+#include "../include/help.hpp"
 #include "../include/toml++/toml.hpp"
 
 int _argc;
@@ -37,9 +38,11 @@ int main(int argc, char* argv[]) {
         }
     } else if (get(1) == "exec") {
         compiler::exec(config);
+    } else if (get(1) == "help") {
+        std::cout << help_message;
     } else {
         std::cerr << "Usage: " << argv[0] << " <command>\n";
-        std::cerr << "Commands: run, build, exec\n";
+        std::cerr << "Please use `cpx help` for help.\n";
         return 1;
     }
 }

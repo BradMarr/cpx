@@ -1,2 +1,5 @@
 [exec]
-args = ["build", "clean"]
+args = ["build"]
+
+[run]
+args = ["help"]

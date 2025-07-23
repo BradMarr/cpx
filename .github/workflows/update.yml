@@ -1,0 +1,101 @@
+name: Update Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      update_type:
+        description: "Update Type"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+
+jobs:
+  update-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Installing Latest CPX
+        run: curl -L https://cpxsh.bmarr.com/ | sh
+
+      - name: Building Main
+        run: cpx build
+
+      - name: Get Latest Release Tag and Bump Version
+        id: bump_version
+        env:
+          UPDATE_TYPE: ${{ github.event.inputs.update_type }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Fetch latest release tag from GitHub API
+          LATEST_TAG=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
+
+          echo "Latest release tag: $LATEST_TAG"
+
+          # Parse version number from tag (strip 'v' and '-beta')
+          VERSION=${LATEST_TAG#v}
+          VERSION=${VERSION%-beta}
+          echo "Current version: $VERSION"
+
+          # Split into MAJOR, MINOR, PATCH
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          MAJOR=${MAJOR:-0}
+          MINOR=${MINOR:-0}
+          PATCH=${PATCH:-0}
+
+          # Bump version according to input
+          case "$UPDATE_TYPE" in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+            *)
+              echo "Invalid bump type: $UPDATE_TYPE"
+              exit 1
+              ;;
+          esac
+
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          NEW_TAG="v${NEW_VERSION}-beta"
+
+          echo "New version: $NEW_VERSION"
+          echo "New tag: $NEW_TAG"
+
+          # Set outputs for later steps
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          echo "old_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+      - name: Rename CPX binary
+        run: mv .cpx/build/main cpx
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.bump_version.outputs.new_tag }}
+          name: ${{ steps.bump_version.outputs.new_tag }}
+          body: |
+            **Full Changelog**: https://github.com/BradMarr/cpx/compare/${{ steps.bump_version.outputs.old_tag }}...${{ steps.bump_version.outputs.new_tag }}
+          draft: false
+          files: |
+            cpx
+            install.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

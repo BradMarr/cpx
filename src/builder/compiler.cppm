@@ -216,6 +216,17 @@ export namespace compiler {
         general_build(config, to_clean);
         std::cout << "\n -- Build Complete --\n" << std::endl;
     }
+
+    void rebuild(const toml::table& config, const std::string_view module_name) {
+        modules::working_dir = std::filesystem::path(".cpx") / "build";
+        modules::Module target((std::basic_string(module_name)));
+
+        std::filesystem::remove(target.path("meta"));
+
+        general_build(config);
+
+        std::cout << "\n -- Rebuild Complete --\n" << std::endl;
+    }
     
     void run(const toml::table& config, bool to_clean = false) {
         modules::working_dir = std::filesystem::path(".cpx") / "run";

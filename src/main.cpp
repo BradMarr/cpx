@@ -36,6 +36,9 @@ int main(int argc, char* argv[]) {
         } else {
             compiler::build(config);
         }
+    } else if (get(1) == "rebuild") {
+        const toml::table config = toml::parse_file(".cpx/config.toml");
+        compiler::rebuild(config, get(2));
     } else if (get(1) == "exec") {
         const toml::table config = toml::parse_file(".cpx/config.toml");
         compiler::exec(config);

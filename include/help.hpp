@@ -17,5 +17,10 @@ Commands:
     Arguments:
       clean   Optional. Force rebuild of all modules.
 
+  rebuild [module]
+    Force compiles the module requested.
+    Arguments:
+      module  Mandatory. The module name.
+
   exec
     Run compiled executable from build.)";
